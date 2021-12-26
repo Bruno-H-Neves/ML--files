@@ -1,4 +1,4 @@
-                                    Versao 3- Pipelines
+                                    Versao 4.0- Pipelines- Exemplo Tratamento de dados 
 
 Introducao ao machine learning- em problemas de classificacao
 Resumo:
@@ -31,3 +31,5 @@ Passos:
             Comparacao grafica com metodos em separado: LR-CV
                                                         SS-Lr-CV
                                                         pipe(SS-Lr)-CV
+
+2-  Exemplo no tratamento de base de dados temporal de lisboa
