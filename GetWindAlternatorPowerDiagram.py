@@ -16,7 +16,7 @@ WT_df=WindTurbine.copy()
 #print('Info:\n',WT_df.info())
 
 def plot_1(df):
-    plt.figure(figsize=(25,10))
+    plt.figure(figsize=(15,10))
     sns.scatterplot(data=df,x='Wind Speed (m/s)',y='LV ActivePower (kW)',s=1,label='Real (KW)',color='purple') 
     sns.scatterplot(data=df,x='Wind Speed (m/s)',y='Theoretical_Power_Curve (KWh)',s=1,label='Theorical (kwh)',color='green') 
     plt.xlabel('wind speed (m/s)', size=10)
@@ -26,7 +26,7 @@ def plot_1(df):
     plt.show()
 
 def plot_2(df, show_real=False):
-    plt.figure(figsize=(25,10))
+    plt.figure(figsize=(15,10))
     sns.scatterplot(data=df,x='Wind Speed (m/s)',y='Theoretical_Power_Curve (KWh)',s=1,label='Theorical (kwh)',color='green') 
     sns.scatterplot(data=df,x='Wind Speed (m/s)',y='Theo_P_Max',s=1,label='Max power accept (KW)',color='red') 
     sns.scatterplot(data=df,x='Wind Speed (m/s)',y='Theo_P_Min',s=1,label='Min power accept (KW)',color='blue') 
@@ -40,21 +40,21 @@ def plot_2(df, show_real=False):
     plt.show()
 
 
-#plot_1(WT_df)
+plot_1(WT_df)
 
 #make a histerisys
 Real_data = WT_df['LV ActivePower (kW)']                #make a list
 Teorical_data = WT_df['Theoretical_Power_Curve (KWh)']  #make a list
 Theo_P_Max=[]
 Theo_P_Min=[]
-limits=(0.95,1.05)
+limits=(0.97,1.03)
 for power in Teorical_data:
     Theo_P_Max.append(power*limits[1])
     Theo_P_Min.append(power*limits[0])
 
 WT_df['Theo_P_Max']=Theo_P_Max
 WT_df['Theo_P_Min']=Theo_P_Min
-#plot_2(WT_df,True)
+plot_2(WT_df,True)
 
 #make data for machine learning
 
@@ -86,8 +86,19 @@ def show_results(x_te,y_te,x_tr,y_tr,y_pr):
     for idx, error in enumerate(Error):
         print(f'{error} -> {Error[error]}')
 
+def plot_3(df):
+    plt.figure(figsize=(15,10))
+    sns.scatterplot(data=df,x='wind',y= 'y_test',s=1,label='Real Curve',color='green') 
+    sns.scatterplot(data=df,x='wind',y= 'y_pred',s=1,label='Machine Learning Curve',color='red') 
+    plt.xlabel('wind speed (m/s)', size=10)
+    plt.ylabel('KWh', size=10)
+    plt.title('Real vs Predict Turbine Curve')
+    plt.legend(fontsize=8)
+    plt.show()
+
 
 X_train, X_test, y_train, y_test = train_test_split(X.reshape(-1,1), y, test_size = 0.70, random_state = 42)
+
 model=ExtraTreesRegressor()
 #print(X_train.shape)
 #print(y_train.shape)
@@ -95,5 +106,29 @@ model.fit(X_train,y_train)
 y_pred = model.predict(X_test)
 show_results(X_test,y_test,X_train,y_train,y_pred)
 
+#print(X_test)
+#print(y_test.shape)
+#print(y_pred.shape)
+X_test1=[]
+for test in X_test:
+    X_test1.append(test[0])
 
- 
+columns=['wind','y_test','y_pred']
+df_test=pd.DataFrame(columns=columns)
+df_test['wind']=X_test1
+df_test['y_test']=y_test
+df_test['y_pred']=y_pred
+#print(df_test)
+plot_3(df_test)
+
+import joblib
+
+
+filename = 'Kaggle_Wind_Turbine_Turkey.sav'
+joblib.dump(model, filename)                    # Save model current folder 
+
+load_model = joblib.load(filename)              # load file 
+nb = input('Introduce a Wind Speed (m/s):')
+data=[[nb]]
+test23=load_model.predict(data)
+print(f'Theoric Active Power: {test23[0]} KW')
