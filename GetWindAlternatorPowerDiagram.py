@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import warnings
 warnings.filterwarnings("ignore")
+import numpy as np
 
 
 WindTurbine=pd.read_csv(r"C:\Datasets-base\Datasets\Scada\T1.csv")
@@ -41,6 +42,7 @@ def plot_2(df, show_real=False):
 
 #plot_1(WT_df)
 
+#make a histerisys
 Real_data = WT_df['LV ActivePower (kW)']                #make a list
 Teorical_data = WT_df['Theoretical_Power_Curve (KWh)']  #make a list
 Theo_P_Max=[]
@@ -52,7 +54,46 @@ for power in Teorical_data:
 
 WT_df['Theo_P_Max']=Theo_P_Max
 WT_df['Theo_P_Min']=Theo_P_Min
-plot_2(WT_df,True)
+#plot_2(WT_df,True)
+
+#make data for machine learning
+
+def data_ML(df):
+    
+    y = df['Theoretical_Power_Curve (KWh)'].values
+    X = df['Wind Speed (m/s)'].values
+    return X, y
+
+X,y=data_ML(WT_df)
+#print('Feature:\n',type(X[0]))
+#print('Target:\n',type(y[0]))
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn import metrics
+
+def show_results(x_te,y_te,x_tr,y_tr,y_pr):
+    Mabs=metrics.mean_absolute_error(y_te, y_pr)
+    MSq=metrics.mean_absolute_error(y_te, y_pr)
+    RMSquared  = np.sqrt(metrics.mean_squared_error(y_te, y_pr))
+    Acc_Tr=model.score(x_tr,y_tr)
+    Acc_test= model.score(x_te,y_te)
+    Error={'MAbs:':Mabs,
+           'MSq:': MSq,
+           'RMSquared:':RMSquared,
+           'Acc on Traning:': Acc_Tr,
+           'Acc on Testing:': Acc_test}
+    for idx, error in enumerate(Error):
+        print(f'{error} -> {Error[error]}')
 
 
-#make a histerisys 
+X_train, X_test, y_train, y_test = train_test_split(X.reshape(-1,1), y, test_size = 0.70, random_state = 42)
+model=ExtraTreesRegressor()
+#print(X_train.shape)
+#print(y_train.shape)
+model.fit(X_train,y_train)
+y_pred = model.predict(X_test)
+show_results(X_test,y_test,X_train,y_train,y_pred)
+
+
+ 
